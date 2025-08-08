@@ -90,7 +90,7 @@ namespace AzUpdate
             // List<UpdateItem>를 루프돌면서 (1)동적 컨텐츠 읽어오고, (2)HTML 스니펫 생성
             foreach (UpdateItem updateItem in itemList)
             {
-                updateItem.Description = this.GetDesc(updateItem.Link, waitingDuration);
+                updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
                 updateItem.Title = ReplaceBadgeText(updateItem.Title);
                 body += string.Format(itemTemplate,
                     updateItem.Link,
@@ -110,6 +110,11 @@ namespace AzUpdate
             string html = string.Format(htmlTemp, head, body);
 
             //원래는 전체 HTML을 반환하려 했지만, 데이터를 줄이기 위해 body만 반환
+            //string sign = @"<div style=""text-align: right;"">
+            //                    <span class=""main-title"">Project <span class=""orange-text"">UP</span><span class=""silver-text"">(date)</span></span>
+            //                    <span class=""silver-text"">by <span class=""se-text"">SE태지</span></span>
+            //                </div>";
+
             return new OkObjectResult(body);
 
 
@@ -228,7 +233,6 @@ namespace AzUpdate
                         margin-right: 0.8rem;
                     }
 
-
                     .status-badge-retirement {
                         background: #ff6b6b;
                         color: white;
@@ -254,6 +258,30 @@ namespace AzUpdate
                         color: #2c3e50;
                     }
 
+                    span.main-title {
+                        display: inline-block;
+                        padding: 0.2rem 0.5rem;
+                        font-weight: 500;
+                        font-size: 1rem;
+                        text-align: center;
+                        position: relative;
+
+                    }
+
+                    .orange-text {
+                        color: #ff8c00;
+                    }
+
+                    .silver-text {
+                        color: #878686ad;
+                        font-size: 0.9rem;
+                    }
+
+                    .se-text {
+                        color: #04c977ad;
+                        font-size: 0.9rem;
+                        font-weight: 600;
+                    }
                     /* adaptive design */
                     @media (max-width: 768px) {
                         body {
@@ -327,7 +355,7 @@ namespace AzUpdate
             return text;
         }
 
-        private string GetDesc(string link, int waitingDuration)
+        private string GetContentsFromWebSite(string link, int waitingDuration)
         {
             string description = string.Empty;
             try
@@ -430,6 +458,7 @@ namespace AzUpdate
                             {
                                 item.Category += itemCategory.InnerText.Trim() + ",";
                             }
+                            item.Category = item.Category?.TrimEnd(',');
                         }
 
                         DateTime dtPubDate = Convert.ToDateTime(item.PubDate);
