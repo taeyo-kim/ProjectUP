@@ -170,7 +170,7 @@ namespace AzUpdate
                     }
 
                     .update-title b {
-                        font-weight: 600;
+                        font-weight: 400;
                     }
 
                     .update-details {
@@ -191,13 +191,12 @@ namespace AzUpdate
                     
                     li li {margin-left: 1.5rem;}
 
-                    .status-badge-GA {
-                        background: #28a745;
+                    .status-badge {
                         color: white;
                         padding: 0.4rem 1rem;
                         border-radius: 20px;
-                        font-size: 1rem;
-                        font-weight: 600;
+                        font-size: 0.8rem;
+                        font-weight: 500;
                         text-transform: uppercase;
                         letter-spacing: 0.5px;
                         border: none;
@@ -205,46 +204,21 @@ namespace AzUpdate
                         margin-right: 0.8rem;
                     }
 
-                    .status-badge-dev {
+                    .GA{
+                        background: #28a745;
+                    }
+
+                    .dev {
                         background: #FFFF00;
                         color: black;
-                        padding: 0.4rem 1rem;
-                        border-radius: 20px;
-                        font-size: 1rem;
-                        font-weight: 600;
-                        text-transform: uppercase;
-                        letter-spacing: 0.5px;
-                        border: none;
-                        display: inline-block;
-                        margin-right: 0.8rem;
                     }
 
-                    .status-badge-preview {
+                    .preview {
                         background: #00c3ff;
-                        color: white;
-                        padding: 0.4rem 1rem;
-                        border-radius: 20px;
-                        font-size: 1rem;
-                        font-weight: 600;
-                        text-transform: uppercase;
-                        letter-spacing: 0.5px;
-                        border: none;
-                        display: inline-block;
-                        margin-right: 0.8rem;
                     }
 
-                    .status-badge-retirement {
+                    .retirement {
                         background: #ff6b6b;
-                        color: white;
-                        padding: 0.4rem 1rem;
-                        border-radius: 20px;
-                        font-size: 1rem;
-                        font-weight: 600;
-                        text-transform: uppercase;
-                        letter-spacing: 0.5px;
-                        border: none;
-                        display: inline-block;
-                        margin-right: 0.8rem;
                     }
 
                     strong {
@@ -330,27 +304,27 @@ namespace AzUpdate
             if (text.Contains("[In preview]"))
             {
                 text = text.Replace("Public Preview:", "");
-                //text = text.Replace("[In preview]", "<span class='status-badge-preview'>미리 보기(Public Preview) </span>");
-                text = text.Replace("[In preview]", "<span class='status-badge-preview'>[In preview]</span>");
+                //text = text.Replace("[In preview]", "<span class='status-badge preview'>미리 보기(Public Preview) </span>");
+                text = text.Replace("[In preview]", "<span class='status-badge preview'>[In preview]</span>");
 
             }
             if (text.Contains("[In development]"))
             {
                 text = text.Replace("Private Preview:", "");
-                //text = text.Replace("[In development]", "<span class='status-badge-dev'>개발 중(Private Preview)</span>");
-                text = text.Replace("[In development]", "<span class='status-badge-dev'>[In development]</span>");
+                //text = text.Replace("[In development]", "<span class='status-badge dev'>개발 중(Private Preview)</span>");
+                text = text.Replace("[In development]", "<span class='status-badge dev'>[In development]</span>");
             }
 
             if (text.Contains("[Launched]"))
             {
                 text = text.Replace("Generally Available:", "");
-                //text = text.Replace("[Launched]", "<span class='status-badge-GA'>정식 출시(G.A)</span>");
-                text = text.Replace("[Launched]", "<span class='status-badge-GA'>[Launched]</span>");
+                //text = text.Replace("[Launched]", "<span class='status-badge GA'>정식 출시(G.A)</span>");
+                text = text.Replace("[Launched]", "<span class='status-badge GA'>[Launched]</span>");
             }
             if (text.Contains("Retirement:"))
             {
-                //text = text.Replace("Retirement:", "<span class='status-badge-retirement'>서비스 종료(Deprecated)</span>");
-                text = text.Replace("Retirement:", "<span class='status-badge-retirement'>Retirement:</span>");
+                //text = text.Replace("Retirement:", "<span class='status-badge retirement'>서비스 종료(Deprecated)</span>");
+                text = text.Replace("Retirement:", "<span class='status-badge retirement'>Retirement:</span>");
             }
             return text;
         }
