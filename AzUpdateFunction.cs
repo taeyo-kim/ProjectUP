@@ -100,11 +100,19 @@ namespace AzUpdate
                     updateItem.PubDate);
             }
 
-            body = body.Replace("\r", "")
-                       .Replace("\n", "")
-                       .Replace("\t", "")
-                       .Replace("  ", "")
-                       .Replace("\"", "'");
+            //본문이 없는 경우, 업데이트 없다는 문장으로 대체
+            if (body.Trim().Length > 0)
+            {
+                body = body.Replace("\r", "")
+                           .Replace("\n", "")
+                           .Replace("\t", "")
+                           .Replace("  ", "")
+                           .Replace("\"", "'");
+            }
+            else
+            {
+                body = $@"<div class='update-item'><div class='update-title'><b>No Update Today</b></div></div>";
+            }
 
             // html 문자열 완성하기
             string html = string.Format(htmlTemp, head, body);
