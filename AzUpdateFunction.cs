@@ -111,7 +111,8 @@ namespace AzUpdate
             }
             else
             {
-                body = $@"<div class='update-item'><div class='update-title'><b>No Update Today</b></div></div>";
+                //업데이트가 없으면 그냥 빈 문자열로 보내달라는 요청에 따라 주석처리
+                //body = $@"<div class='update-item'><div class='update-title'><b>No Update Today</b></div></div>";
             }
 
             // html 문자열 완성하기
@@ -235,9 +236,15 @@ namespace AzUpdate
                         margin-right: 0.5rem;
                     }
 
-                    a {
-                        text-decoration: none;
+                    b a {
+                        text-decoration: none ;
+                        font-weight: 600;
                         color: #2c3e50;
+                    }
+
+                    a {
+                        text-decoration: underline ;
+                        color: #007acc;
                     }
 
                     span.main-title {
