@@ -33,8 +33,14 @@ namespace AzUpdate
             );
         }
 
+        [Function("Init")]
+        public IActionResult Init([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req)
+        {
+            return new OkObjectResult("Function Initialized");
+        }
+
         [Function("GetUpdate")]
-        public IActionResult Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req)
+        public IActionResult GetUpdate([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req)
         {
             string url = "https://azure.microsoft.com/ko-kr/updates?id=498166";
             int waitingDuration = 2000;
