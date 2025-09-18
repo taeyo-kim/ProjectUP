@@ -3,10 +3,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Extensions.Sql;
+using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using System.Net;
+using System.Web;
 using System.Xml;
+using FuncHttp = Microsoft.Azure.Functions.Worker.Http;
 
 namespace AzUpdate
 {
@@ -96,7 +100,8 @@ namespace AzUpdate
             // List<AzUpdateNews>를 루프돌면서 (1)동적 컨텐츠 읽어오고, (2)HTML 스니펫 생성, (3)DB 저장용 리스트에 추가
             foreach (AzUpdateNews updateItem in itemList)
             {
-                updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
+                //임시로 막아두고, V1에서 주석을 풀기만 하면 됨.
+                //updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
                 updateItem.Title = ReplaceBadgeText(updateItem.Title);
 
                 body += string.Format(itemTemplate,
@@ -129,6 +134,100 @@ namespace AzUpdate
             return new OkObjectResult(body);
         }
 
+       [Function("GetUpdate2")]
+        public async Task<MultiResponse> GetUpdate2(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get")] FuncHttp.HttpRequestData req)
+        {
+            int waitingDuration = 2000;
+            int targetHour = 24;
+
+            //// 수정된 코드 (CS8600 방지)
+            var query = HttpUtility.ParseQueryString(req.Url.Query);
+
+            // Now you can access query parameters by name
+            string? w = query["WaitingDuration"];
+            string? h = query["Hour"];
+
+            if (!string.IsNullOrEmpty(w)) waitingDuration = int.Parse(w);
+            if (!string.IsNullOrEmpty(h)) targetHour = int.Parse(h);
+
+            string htmlTemp = $"<html>{{0}}<body>{{1}}</body></html>";
+
+            // 스타일이 포함된 HTML 템플릿
+            string head = GetHeadAndStyle();
+            head = head.Replace("\r", "").Replace("\n", "").Replace("\t", "").Replace("  ", "");
+
+            // RSS에서 피드에서 AzUpdateNews으로 변환하여 필요한 정보만 가져오기
+            List<AzUpdateNews> itemList = GetAzUpdateNewsListFromRssFeed(RssFeed.AzureUpdate, targetHour);
+
+            string itemTemplate = $@"<div class='update-item'>
+                                        <div class='update-title'><b><a href='{{0}}'>{{1}}</a></b></div>
+                                        <ul class='update-details'>
+                                            <li style='border-left-color: #ff6b6b'><strong>Description:</strong>{{2}}</li>
+                                            <li style='border-left-color: #4ecdc4'><strong>Category:</strong>{{3}}</li>
+                                            <li style='border-left-color: #45b7d1'><strong>Publication Date:</strong>{{4}}(UTC)</li>
+                                        </ul>
+                                    </div>";
+            string body = string.Empty;
+
+
+            List<AzUpdateNews> dbItems = new List<AzUpdateNews>();
+
+            // List<AzUpdateNews>를 루프돌면서 (1)동적 컨텐츠 읽어오고, (2)HTML 스니펫 생성
+            foreach (AzUpdateNews updateItem in itemList)
+            {
+                //updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
+                updateItem.Title = ReplaceBadgeText(updateItem.Title);
+
+                // DB 저장용 리스트에 추가
+                dbItems.Add(updateItem);
+                _logger.LogInformation($"AzUpdateNews prepared for database: {updateItem.Title}");
+
+                body += string.Format(itemTemplate,
+                    updateItem.Link,
+                    updateItem.Title,
+                    updateItem.Description,
+                    updateItem.Category,
+                    updateItem.PubDate);
+            }
+
+            //본문이 없는 경우, 업데이트 없다는 문장으로 대체
+            if (body.Trim().Length > 0)
+            {
+                body = body.Replace("\r", "")
+                           .Replace("\n", "")
+                           .Replace("\t", "")
+                           .Replace("  ", "")
+                           .Replace("\"", "'");
+            }
+            else
+            {
+                //업데이트가 없으면 그냥 빈 문자열로 보내달라는 요청에 따라 주석처리
+                //body = $@"<div class='update-item'><div class='update-title'><b>No Update Today</b></div></div>";
+            }
+
+            // html 문자열 완성하기
+            string html = string.Format(htmlTemp, head, body);
+
+            FuncHttp.HttpResponseData response = req.CreateResponse(HttpStatusCode.OK);
+            //response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
+            await response.WriteStringAsync(body);
+
+            // MultiResponse로 HTTP 응답과 SQL Output 반환
+            return new MultiResponse()
+            {
+                News = dbItems.ToArray(),
+                HttpResponseData = response
+            };
+        }
+
+        public class MultiResponse
+        {
+            [SqlOutput("dbo.AzUpdateNews", connectionStringSetting: "SqlConnectionString")]
+            public AzUpdateNews[]? News { get; set; }
+
+            public FuncHttp.HttpResponseData? HttpResponseData { get; set; }
+        }
 
         // CSS 스타일 포함된 head 태그 반환
         private string GetHeadAndStyle()
