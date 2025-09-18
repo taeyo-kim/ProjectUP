@@ -141,7 +141,6 @@ namespace AzUpdate
             int waitingDuration = 2000;
             int targetHour = 24;
 
-            //// 수정된 코드 (CS8600 방지)
             var query = HttpUtility.ParseQueryString(req.Url.Query);
 
             // Now you can access query parameters by name
@@ -176,12 +175,8 @@ namespace AzUpdate
             // List<AzUpdateNews>를 루프돌면서 (1)동적 컨텐츠 읽어오고, (2)HTML 스니펫 생성
             foreach (AzUpdateNews updateItem in itemList)
             {
-                //updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
+                updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
                 updateItem.Title = ReplaceBadgeText(updateItem.Title);
-
-                // DB 저장용 리스트에 추가
-                dbItems.Add(updateItem);
-                _logger.LogInformation($"AzUpdateNews prepared for database: {updateItem.Title}");
 
                 body += string.Format(itemTemplate,
                     updateItem.Link,
@@ -189,6 +184,12 @@ namespace AzUpdate
                     updateItem.Description,
                     updateItem.Category,
                     updateItem.PubDate);
+
+                //SQL DB에 저장하는 Title은 일부 단어들을 한국어로 변환
+                updateItem.Title = ReplaceBadgeTextToKorean(updateItem.Title);
+                // DB 저장용 리스트에 추가
+                dbItems.Add(updateItem);
+                _logger.LogInformation($"AzUpdateNews prepared for database: {updateItem.Title}");
             }
 
             //본문이 없는 경우, 업데이트 없다는 문장으로 대체
@@ -441,6 +442,18 @@ namespace AzUpdate
                 //text = text.Replace("Retirement:", "<span class='status-badge retirement'>서비스 종료(Deprecated)</span>");
                 text = text.Replace("Retirement:", "<span class='status-badge retirement'>Retirement:</span>");
             }
+            return text;
+        }
+
+        private string ReplaceBadgeTextToKorean(string text)
+        {
+            text = text
+                .Replace("Description", "설명")
+                .Replace("Retirement:", "지원 종료:")
+                .Replace("[In development]", "미리보기(비공개)")
+                .Replace("[In preview]", "미리보기(공개)")
+                .Replace("[Launched]", "정식 지원(GA)");
+            
             return text;
         }
 
