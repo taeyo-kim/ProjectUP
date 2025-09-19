@@ -176,7 +176,8 @@ namespace AzUpdate
                     string? title = updateItem.Title = ReplaceBadgeText(updateItem.Title);
 
                     //SQL DB에 저장하는 Title은 일부 단어들을 한국어로 변환
-                    updateItem.Title = ReplaceBadgeTextToKorean(updateItem.Title);
+                    //한글이 깨지는 현상을 해결하기 힘들어서 일단 그냥 영문으로 보냄.
+                    //updateItem.Title = ReplaceBadgeTextToKorean(updateItem.Title);
                     // DB 저장용 리스트에 추가
                     dbItems.Add(updateItem);
                     _logger.LogInformation($"AzUpdateNews prepared for database: {updateItem.Title}");
