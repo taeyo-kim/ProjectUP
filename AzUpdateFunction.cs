@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using System.Net;
+using System.Text;
 using System.Web;
 using System.Xml;
 using FuncHttp = Microsoft.Azure.Functions.Worker.Http;
@@ -41,9 +42,9 @@ namespace AzUpdate
             return new OkObjectResult("Function Initialized");
         }
 
-        // Azure 업데이트 정보를 RSS Feed에서 읽어와 HTML로 반환하고, SQL DB에 저장
-        [Function("GetUpdate")]
-        public async Task<IActionResult> GetUpdate(
+        // Azure 업데이트 정보를 RSS Feed에서 읽어와 HTML로 반환
+        [Function("GetUpdateHTMLOnly")]
+        public async Task<IActionResult> GetUpdateHTMLOnly(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequest req)
         {
             string url = "https://azure.microsoft.com/ko-kr/updates?id=498166";
@@ -92,7 +93,7 @@ namespace AzUpdate
             // List<AzUpdateNews>를 루프돌면서 (1)동적 컨텐츠 읽어오고, (2)HTML 스니펫 생성, (3)DB 저장용 리스트에 추가
             foreach (AzUpdateNews updateItem in itemList)
             {
-                //임시로 막아두고, V1에서 주석을 풀기만 하면 됨.
+                //임시로 막아두고, V1에서 주석을 풀기만 하면 됨. 밑의 함수에서도 한줄 제거
                 //updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
                 updateItem.Title = ReplaceBadgeText(updateItem.Title);
 
@@ -126,8 +127,8 @@ namespace AzUpdate
             return new OkObjectResult(body);
         }
 
-       [Function("GetUpdate2")]
-        public async Task<MultiResponse> GetUpdate2(
+       [Function("GetUpdate")]
+        public async Task<MultiResponse> GetUpdateWithDB(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get")] FuncHttp.HttpRequestData req)
         {
             int waitingDuration = 2000;
@@ -164,29 +165,34 @@ namespace AzUpdate
                                     </div>";
             string body = string.Empty;
 
-
             List<AzUpdateNews> dbItems = new List<AzUpdateNews>();
-
             try
             {
                 // List<AzUpdateNews>를 루프돌면서 (1)동적 컨텐츠 읽어오고, (2)HTML 스니펫 생성
                 foreach (AzUpdateNews updateItem in itemList)
                 {
+                    string? desc = updateItem.Description;
                     updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
-                    updateItem.Title = ReplaceBadgeText(updateItem.Title);
-
-                    body += string.Format(itemTemplate,
-                        updateItem.Link,
-                        updateItem.Title,
-                        updateItem.Description,
-                        updateItem.Category,
-                        updateItem.PubDate);
+                    string? title = updateItem.Title = ReplaceBadgeText(updateItem.Title);
 
                     //SQL DB에 저장하는 Title은 일부 단어들을 한국어로 변환
                     updateItem.Title = ReplaceBadgeTextToKorean(updateItem.Title);
                     // DB 저장용 리스트에 추가
                     dbItems.Add(updateItem);
                     _logger.LogInformation($"AzUpdateNews prepared for database: {updateItem.Title}");
+
+                    // HTML 본문에는 원래 Description 사용.
+                    //TODO : V1에서 아래 한줄제거
+                    updateItem.Description = desc;  
+                    updateItem.Title = title;
+
+                    // HTML 본문 생성
+                    body += string.Format(itemTemplate,
+                        updateItem.Link,
+                        updateItem.Title,
+                        updateItem.Description,
+                        updateItem.Category,
+                        updateItem.PubDate);
                 }
 
                 //본문이 없는 경우, 업데이트 없다는 문장으로 대체
@@ -208,7 +214,7 @@ namespace AzUpdate
                 string html = string.Format(htmlTemp, head, body);
 
                 // HTTP 응답에 HTML 본문 쓰기
-                await response.WriteStringAsync(body);
+                await response.WriteStringAsync(body, Encoding.UTF8);
 
                 // MultiResponse로 HTTP 응답과 SQL Output 반환
                 return new MultiResponse()
@@ -229,6 +235,9 @@ namespace AzUpdate
                     HttpResponseData = response
                 };
             }
+
+            //TODO: 생각해보니 OkObjectResult(body) 할 때는 한글이 문제없는데, 여기서만 문제인거 같다.
+
         }
 
         public class MultiResponse
@@ -456,14 +465,12 @@ namespace AzUpdate
 
         private string ReplaceBadgeTextToKorean(string text)
         {
-            text = text
+            return text
                 .Replace("Description", "설명")
                 .Replace("Retirement:", "지원 종료:")
                 .Replace("[In development]", "미리보기(비공개)")
                 .Replace("[In preview]", "미리보기(공개)");
                 //.Replace("[Launched]", "정식 지원(GA)");
-            
-            return text;
         }
 
         // Selenium 사용하여 동적 컨텐츠 읽어오기
