@@ -14,15 +14,7 @@ using FuncHttp = Microsoft.Azure.Functions.Worker.Http;
 
 namespace AzUpdate
 {
-    public class AzUpdateNews
-    {
-        public string? Title { get; set; }
-        public string? Link { get; set; }
-        public string? Description { get; set; }
-        public string? Category { get; set; }
-        public string? PubDate { get; set; }
-        //public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
-    }
+    // AzUpdateNews moved to Models/AzUpdateNews.cs
 
     public class AzUpdateFunction
     {
@@ -141,6 +133,9 @@ namespace AzUpdate
             int waitingDuration = 2000;
             int targetHour = 24;
 
+            FuncHttp.HttpResponseData response = req.CreateResponse(HttpStatusCode.OK);
+            response.Headers.Add("Content-Type", "text/html; charset=utf-8");
+
             var query = HttpUtility.ParseQueryString(req.Url.Query);
 
             // Now you can access query parameters by name
@@ -172,54 +167,68 @@ namespace AzUpdate
 
             List<AzUpdateNews> dbItems = new List<AzUpdateNews>();
 
-            // List<AzUpdateNews>를 루프돌면서 (1)동적 컨텐츠 읽어오고, (2)HTML 스니펫 생성
-            foreach (AzUpdateNews updateItem in itemList)
+            try
             {
-                updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
-                updateItem.Title = ReplaceBadgeText(updateItem.Title);
+                // List<AzUpdateNews>를 루프돌면서 (1)동적 컨텐츠 읽어오고, (2)HTML 스니펫 생성
+                foreach (AzUpdateNews updateItem in itemList)
+                {
+                    updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
+                    updateItem.Title = ReplaceBadgeText(updateItem.Title);
 
-                body += string.Format(itemTemplate,
-                    updateItem.Link,
-                    updateItem.Title,
-                    updateItem.Description,
-                    updateItem.Category,
-                    updateItem.PubDate);
+                    body += string.Format(itemTemplate,
+                        updateItem.Link,
+                        updateItem.Title,
+                        updateItem.Description,
+                        updateItem.Category,
+                        updateItem.PubDate);
 
-                //SQL DB에 저장하는 Title은 일부 단어들을 한국어로 변환
-                updateItem.Title = ReplaceBadgeTextToKorean(updateItem.Title);
-                // DB 저장용 리스트에 추가
-                dbItems.Add(updateItem);
-                _logger.LogInformation($"AzUpdateNews prepared for database: {updateItem.Title}");
+                    //SQL DB에 저장하는 Title은 일부 단어들을 한국어로 변환
+                    updateItem.Title = ReplaceBadgeTextToKorean(updateItem.Title);
+                    // DB 저장용 리스트에 추가
+                    dbItems.Add(updateItem);
+                    _logger.LogInformation($"AzUpdateNews prepared for database: {updateItem.Title}");
+                }
+
+                //본문이 없는 경우, 업데이트 없다는 문장으로 대체
+                if (body.Trim().Length > 0)
+                {
+                    body = body.Replace("\r", "")
+                               .Replace("\n", "")
+                               .Replace("\t", "")
+                               .Replace("  ", "")
+                               .Replace("\"", "'");
+                }
+                else
+                {
+                    //업데이트가 없으면 그냥 빈 문자열로 보내달라는 요청에 따라 주석처리
+                    //body = $@"<div class='update-item'><div class='update-title'><b>No Update Today</b></div></div>";
+                }
+
+                // html 문자열 완성하기
+                string html = string.Format(htmlTemp, head, body);
+
+                // HTTP 응답에 HTML 본문 쓰기
+                await response.WriteStringAsync(body);
+
+                // MultiResponse로 HTTP 응답과 SQL Output 반환
+                return new MultiResponse()
+                {
+                    News = dbItems.ToArray(),
+                    HttpResponseData = response
+                };
             }
-
-            //본문이 없는 경우, 업데이트 없다는 문장으로 대체
-            if (body.Trim().Length > 0)
+            catch (Exception ex)
             {
-                body = body.Replace("\r", "")
-                           .Replace("\n", "")
-                           .Replace("\t", "")
-                           .Replace("  ", "")
-                           .Replace("\"", "'");
+                // 오류 발생 시 로그 기록 및 오류 메시지 반환
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                await response.WriteStringAsync(ex.Message);
+
+                return new MultiResponse()
+                {
+                    News = dbItems.ToArray(),
+                    HttpResponseData = response
+                };
             }
-            else
-            {
-                //업데이트가 없으면 그냥 빈 문자열로 보내달라는 요청에 따라 주석처리
-                //body = $@"<div class='update-item'><div class='update-title'><b>No Update Today</b></div></div>";
-            }
-
-            // html 문자열 완성하기
-            string html = string.Format(htmlTemp, head, body);
-
-            FuncHttp.HttpResponseData response = req.CreateResponse(HttpStatusCode.OK);
-            //response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
-            await response.WriteStringAsync(body);
-
-            // MultiResponse로 HTTP 응답과 SQL Output 반환
-            return new MultiResponse()
-            {
-                News = dbItems.ToArray(),
-                HttpResponseData = response
-            };
         }
 
         public class MultiResponse
@@ -451,8 +460,8 @@ namespace AzUpdate
                 .Replace("Description", "설명")
                 .Replace("Retirement:", "지원 종료:")
                 .Replace("[In development]", "미리보기(비공개)")
-                .Replace("[In preview]", "미리보기(공개)")
-                .Replace("[Launched]", "정식 지원(GA)");
+                .Replace("[In preview]", "미리보기(공개)");
+                //.Replace("[Launched]", "정식 지원(GA)");
             
             return text;
         }
@@ -508,7 +517,7 @@ namespace AzUpdate
         // RSS Feed에서 AzUpdateNews 리스트로 변환
         List<AzUpdateNews> GetAzUpdateNewsListFromRssFeed(RssFeed feedType, int last)
         {
-            List<AzUpdateNews> itemList = [];
+            List<AzUpdateNews> itemList = new List<AzUpdateNews>();
             AzUpdateNews item;
             string feedUri = feedType switch
             {
