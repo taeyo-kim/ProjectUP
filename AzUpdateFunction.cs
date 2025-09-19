@@ -52,7 +52,7 @@ namespace AzUpdate
         // Azure 업데이트 정보를 RSS Feed에서 읽어와 HTML로 반환하고, SQL DB에 저장
         [Function("GetUpdate")]
         public async Task<IActionResult> GetUpdate(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequest req)
         {
             string url = "https://azure.microsoft.com/ko-kr/updates?id=498166";
             int waitingDuration = 2000;
