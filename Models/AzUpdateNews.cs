@@ -1,4 +1,4 @@
-namespace ProjectUP
+namespace ProjectUP.Models
 {
     public class AzUpdateNews
     {
