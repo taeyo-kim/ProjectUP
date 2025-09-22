@@ -13,7 +13,7 @@ using System.Web;
 using System.Xml;
 using FuncHttp = Microsoft.Azure.Functions.Worker.Http;
 
-namespace AzUpdate
+namespace ProjectUP
 {
     // AzUpdateNews moved to Models/AzUpdateNews.cs
 
@@ -43,8 +43,8 @@ namespace AzUpdate
         }
 
         // Azure 업데이트 정보를 RSS Feed에서 읽어와 HTML로 반환
-        [Function("GetUpdateHTMLOnly")]
-        public async Task<IActionResult> GetUpdateHTMLOnly(
+        [Function("GetNews")]
+        public async Task<IActionResult> GetNews(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequest req)
         {
             string url = "https://azure.microsoft.com/ko-kr/updates?id=498166";
@@ -128,14 +128,14 @@ namespace AzUpdate
         }
 
        [Function("GetUpdate")]
-        public async Task<MultiResponse> GetUpdateWithDB(
+        public async Task<MultiResponse> GetUpdate(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get")] FuncHttp.HttpRequestData req)
         {
             int waitingDuration = 2000;
             int targetHour = 24;
 
             FuncHttp.HttpResponseData response = req.CreateResponse(HttpStatusCode.OK);
-            response.Headers.Add("Content-Type", "text/html; charset=utf-8");
+            response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
 
             var query = HttpUtility.ParseQueryString(req.Url.Query);
 
@@ -173,25 +173,21 @@ namespace AzUpdate
                 {
                     string? desc = updateItem.Description;
                     updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
-                    string? title = updateItem.Title = ReplaceBadgeText(updateItem.Title);
+                    updateItem.Title = ReplaceBadgeText(updateItem.Title);
 
                     //SQL DB에 저장하는 Title은 일부 단어들을 한국어로 변환
-                    //한글이 깨지는 현상을 해결하기 힘들어서 일단 그냥 영문으로 보냄.
+                    //그런데, 한글이 깨지는 현상을 해결하기 힘들어서 주석처리하고 그냥 영문으로 보냄.
                     //updateItem.Title = ReplaceBadgeTextToKorean(updateItem.Title);
                     // DB 저장용 리스트에 추가
                     dbItems.Add(updateItem);
                     _logger.LogInformation($"AzUpdateNews prepared for database: {updateItem.Title}");
 
-                    // HTML 본문에는 원래 Description 사용.
-                    //TODO : V1에서 아래 한줄제거
-                    updateItem.Description = desc;  
-                    updateItem.Title = title;
-
                     // HTML 본문 생성
                     body += string.Format(itemTemplate,
                         updateItem.Link,
                         updateItem.Title,
-                        updateItem.Description,
+                        desc, // HTML 본문에는 원래 Description 사용. TODO : V1에서 아래 한줄제거
+                        // updateItem.Description,
                         updateItem.Category,
                         updateItem.PubDate);
                 }

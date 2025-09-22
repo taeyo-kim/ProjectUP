@@ -1,4 +1,4 @@
-namespace AzUpdate
+namespace ProjectUP
 {
     public class AzUpdateNews
     {
