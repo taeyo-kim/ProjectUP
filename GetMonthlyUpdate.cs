@@ -39,7 +39,7 @@ public class GetMonthlyUpdate
             startDate = DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd");
         
         if (string.IsNullOrEmpty(endDate))
-            endDate = DateTime.Now.ToString("yyyy-MM-dd");
+            endDate = DateTime.Now.AddDays(2).ToString("yyyy-MM-dd");
 
         _logger.LogInformation($"조회 기간: {startDate} ~ {endDate}");
 

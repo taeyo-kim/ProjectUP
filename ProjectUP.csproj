@@ -22,4 +22,7 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
     <PackageReference Include="Selenium.WebDriver" Version="4.34.0" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include=".github\" />
+  </ItemGroup>
 </Project>

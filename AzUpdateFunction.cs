@@ -84,6 +84,7 @@ namespace ProjectUP
             // List<AzUpdateNews>를 루프돌면서 (1)동적 컨텐츠 읽어오고, (2)HTML 스니펫 생성, (3)DB 저장용 리스트에 추가
             foreach (AzUpdateNews updateItem in itemList)
             {
+
                 updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
                 updateItem.Title = Utils.ReplaceBadgeText(updateItem.Title);
 
@@ -117,22 +118,26 @@ namespace ProjectUP
             return new OkObjectResult(body);
         }
 
-       [Function("GetUpdate")]
+        [Function("GetUpdate")]
         public async Task<MultiResponse> GetUpdate(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get")] FuncHttp.HttpRequestData req)
         {
-            int waitingDuration = 2000;
+            /// 기본값 설정
+            int waitingDuration = 3000;
             int targetHour = 24;
 
+            /// 변수 초기화
             string body = string.Empty;
             List<AzUpdateNews> dbItems = new List<AzUpdateNews>();
 
+            /// HTTP 응답 초기화
             FuncHttp.HttpResponseData response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
 
+            /// 쿼리 문자열에서 매개변수 읽기
             var query = HttpUtility.ParseQueryString(req.Url.Query);
 
-            // Now you can access query parameters by name
+            /// 쿼리 문자열에서 매개변수 읽기
             string? w = query["WaitingDuration"];
             string? h = query["Hour"];
 
@@ -141,7 +146,7 @@ namespace ProjectUP
 
             string htmlTemp = $"<html>{{0}}<body>{{1}}</body></html>";
 
-            // 스타일이 포함된 HTML 템플릿
+            /// 스타일이 포함된 HTML 템플릿
             string head = Utils.GetHeadAndStyle();
             head = head.Replace("\r", "").Replace("\n", "").Replace("\t", "").Replace("  ", "");
 
