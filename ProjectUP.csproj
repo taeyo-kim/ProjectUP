@@ -23,6 +23,6 @@
     <PackageReference Include="Selenium.WebDriver" Version="4.34.0" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include=".github\" />
+    <None Include=".github\prompts\security-check.prompt.md" />
   </ItemGroup>
 </Project>
