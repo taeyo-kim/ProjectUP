@@ -1,0 +1,17 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+        "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+        "SqlConnectionString": "Server=localhost;Database=AzureUpdates;Integrated Security=true;TrustServerCertificate=true;",
+        "ENVIRONMENT": "Development",
+        "BlobAccountUrl": "https://projectupstorageaccount.blob.core.windows.net/",
+        "BlobContainerName": "pdf-files",
+        "AZURE_TENANT_ID": "your-tenant-id-here",
+        "AZURE_CLIENT_ID": "your-client-id-here",
+        "AZURE_CLIENT_SECRET": "your-client-secret-here"
+    },
+    "ConnectionStrings": {
+        "SqlConnectionString": "Server=tcp:projectupdbserver.database.windows.net,1433;Initial Catalog=projectupdb;Persist Security Info=False;User ID=projectup;Password=vmfhwprxmdjq@2025;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+    }
+}
