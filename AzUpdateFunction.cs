@@ -174,8 +174,7 @@ namespace ProjectUP
                     body += string.Format(itemTemplate,
                         updateItem.Link,
                         updateItem.Title,
-                        desc, // HTML 본문에는 원래 Description 사용. TODO : V1에서 아래 한줄제거
-                        // updateItem.Description,
+                        updateItem.Description,
                         updateItem.Category,
                         updateItem.PubDate);
                 }
