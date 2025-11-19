@@ -125,6 +125,7 @@ namespace ProjectUP
             /// 기본값 설정
             int waitingDuration = 3000;
             int targetHour = 24;
+            string readingType = "FULL";  // or RSS
 
             /// 변수 초기화
             string body = string.Empty;
@@ -140,9 +141,11 @@ namespace ProjectUP
             /// 쿼리 문자열에서 매개변수 읽기
             string? w = query["WaitingDuration"];
             string? h = query["Hour"];
+            string? t = query["ReadingType"];
 
             if (!string.IsNullOrEmpty(w)) waitingDuration = int.Parse(w);
             if (!string.IsNullOrEmpty(h)) targetHour = int.Parse(h);
+            if (!string.IsNullOrEmpty(t)) readingType = t;
 
             string htmlTemp = $"<html>{{0}}<body>{{1}}</body></html>";
 
@@ -160,7 +163,15 @@ namespace ProjectUP
                 foreach (AzUpdateNews updateItem in itemList)
                 {
                     string? desc = updateItem.Description;
-                    updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
+                    if (readingType == "FULL")
+                    {
+                        updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
+                    }
+                    else  // RSS
+                    {
+                        updateItem.Description = desc;
+                    }
+
                     updateItem.Title = Utils.ReplaceBadgeText(updateItem.Title);
 
                     //SQL DB에 저장하는 Title은 일부 단어들을 한국어로 변환

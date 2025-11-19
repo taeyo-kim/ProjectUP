@@ -1,3 +1,6 @@
+using Azure.Identity;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
@@ -5,8 +8,11 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ProjectUP.Models;
+using PuppeteerSharp;
+using PuppeteerSharp.Media;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Threading.Tasks;
 
@@ -23,23 +29,25 @@ public class GetMonthlyUpdate
         _configuration = configuration;
     }
 
-    [Function("GetMonthlyUpdate")]
+    [Function("GetUpdateByPeriod")]
     public async Task<IActionResult> Run(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequest req)
     {
         _logger.LogInformation("GetMonthlyUpdate 함수 실행 시작");
         string body = string.Empty;
+        string startDate = string.Empty;
+        string endDate = string.Empty;
 
         // 쿼리 파라미터 추출
-        string startDate = req.Query["StartDate"];
-        string endDate = req.Query["EndDate"];
+        string? period = req.Query["Period"];
+        if (string.IsNullOrEmpty(period)) period = "Weekly";
 
         // 기본값 설정
-        if (string.IsNullOrEmpty(startDate))
+        if (period == "Weekly")
+            startDate = DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd");
+        if (period == "Monthly")
             startDate = DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd");
-        
-        if (string.IsNullOrEmpty(endDate))
-            endDate = DateTime.Now.AddDays(2).ToString("yyyy-MM-dd");
+        endDate = DateTime.Now.ToString("yyyy-MM-dd");
 
         _logger.LogInformation($"조회 기간: {startDate} ~ {endDate}");
 
@@ -53,15 +61,15 @@ public class GetMonthlyUpdate
             await using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 await connection.OpenAsync();
-                
+
                 string queryText = "SELECT * FROM dbo.AzUpdateNews_EN WHERE DT BETWEEN @StartDate AND @EndDate";
-                
+
                 await using (SqlCommand command = new SqlCommand(queryText, connection))
                 {
                     // 파라미터 추가
                     command.Parameters.Add("@StartDate", SqlDbType.Date).Value = startDate;
                     command.Parameters.Add("@EndDate", SqlDbType.Date).Value = endDate;
-                    
+
                     // 쿼리 실행 및 결과 읽기
                     await using (SqlDataReader reader = await command.ExecuteReaderAsync())
                     {
@@ -75,7 +83,7 @@ public class GetMonthlyUpdate
                                 Category = reader["Category"] != DBNull.Value ? reader.GetString(reader.GetOrdinal("Category")) : string.Empty,
                                 PubDate = reader["PubDate"] != DBNull.Value ? reader.GetString(reader.GetOrdinal("PubDate")) : string.Empty
                             };
-                            
+
                             updateNewsItems.Add(item);
                         }
                     }
@@ -110,6 +118,9 @@ public class GetMonthlyUpdate
             string head = Utils.GetHeadAndStyle();
             string html = string.Format(htmlTemp, head, body);
 
+            string fileName = $"AzureUpdates_{period}_{startDate}.pdf";
+            await CreateHtml2PDF(html, fileName);
+
             return new ContentResult { Content = html, ContentType = "text/html" };
             //return new OkObjectResult(html);
         }
@@ -121,5 +132,64 @@ public class GetMonthlyUpdate
                 StatusCode = StatusCodes.Status500InternalServerError
             };
         }
+
+    }
+
+    async Task CreateHtml2PDF(string html, string fileName)
+    {
+        _logger.LogInformation("PDF 생성 + Blob 업로드(Managed Identity) 시작");
+        // Blob 설정
+        string accountUrl = Environment.GetEnvironmentVariable("BlobAccountUrl") ?? throw new InvalidOperationException("AzureStorage 설정 누락");
+        string container = Environment.GetEnvironmentVariable("BlobContainerName") ?? "pdf-files";
+
+        // Managed Identity로 인증
+        //    로컬 디버깅: 개발자 자격 증명 (VS/CLI) 사용 → 필요 시 Azure 로그인
+        //    Azure에 배포: 함수앱의 시스템 할당 MI가 자동 사용됨
+        var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
+        {
+            ExcludeEnvironmentCredential = false,
+            ExcludeManagedIdentityCredential = false,
+            // 네트워크 격리된 환경에서 AuthorityHost가 다르면 여기 지정
+        });
+
+        var blobServiceClient = new BlobServiceClient(new Uri(accountUrl), credential);
+        var containerClient = blobServiceClient.GetBlobContainerClient(container);
+        await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
+        var blobClient = containerClient.GetBlobClient(fileName);
+
+        await new BrowserFetcher().DownloadAsync();
+        var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+        {
+            Headless = true,
+            Args = new[] { "--no-sandbox" } // 컨테이너이면 권장
+        });
+        var page = await browser.NewPageAsync();
+
+        var pdfOptions = new PdfOptions
+        {
+            Format = PaperFormat.A4,
+            PrintBackground = true,
+            MarginOptions = new MarginOptions { Top = "20mm", Bottom = "20mm", Left = "15mm", Right = "15mm" },
+            DisplayHeaderFooter = false
+        };
+
+        // HTML 직접 로드(또는 page.GoToAsync(url))
+        await page.SetContentAsync(html);
+
+        //await page.PdfAsync("output.pdf", pdfOptions);
+        ///await browser.CloseAsync();
+
+        // 메모리 스트림으로 PDF 생성
+        byte[] pdfBytes = await page.PdfDataAsync(pdfOptions);
+        using var ms = new MemoryStream(pdfBytes);
+
+        // Blob에 업로드(메모리에서 바로)
+        await blobClient.UploadAsync(ms, overwrite: true);
+
+        // ContentType 메타데이터 설정(선택)
+        await blobClient.SetHttpHeadersAsync(new BlobHttpHeaders { ContentType = "application/pdf" });
+        await browser.CloseAsync();
+
+        _logger.LogInformation($"업로드 완료: {fileName}");
     }
 }
