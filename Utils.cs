@@ -28,6 +28,10 @@ namespace ProjectUP
                 <meta charset='UTF-8'>
                 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
                 <title>Azure Service Updates</title>
+                <!-- 한글 폰트 로드 -->
+                <link rel='preconnect' href='https://fonts.googleapis.com'>
+                <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+                <link href='https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap' rel='stylesheet'>
                 <style>
                     * {
                         margin: 0;
@@ -36,12 +40,14 @@ namespace ProjectUP
                     }
 
                     body {
-                        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                        font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
                         background: #f5f7fa;
                         min-height: 100vh;
                         padding: 0.5rem;
                         line-height: 1.6;
                         color: #333;
+                        -webkit-font-smoothing: antialiased;
+                        -moz-osx-font-smoothing: grayscale;
                     }
 
                     h1 {

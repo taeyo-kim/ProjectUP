@@ -1,3 +1,4 @@
+using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Http;
@@ -61,7 +62,7 @@ public class GetMonthlyUpdate
             {
                 await connection.OpenAsync();
 
-                string queryText = "SELECT * FROM dbo.AzUpdateNews_EN WHERE DT BETWEEN @StartDate AND @EndDate";
+                string queryText = "SELECT * FROM dbo.AzUpdateNews_KO WHERE DT BETWEEN @StartDate AND @EndDate";
 
                 await using (SqlCommand command = new SqlCommand(queryText, connection))
                 {
@@ -120,7 +121,7 @@ public class GetMonthlyUpdate
             string fileName = $"AzureUpdates_{period}_{startDate}.pdf";
             await CreateHtml2PDF(html, fileName);
 
-            return new ContentResult { Content = html, ContentType = "text/html" };
+            return new ContentResult { Content = fileName, ContentType = "text/html" };
             //return new OkObjectResult(html);
         }
         catch (Exception ex)
@@ -131,41 +132,87 @@ public class GetMonthlyUpdate
                 StatusCode = StatusCodes.Status500InternalServerError
             };
         }
-
     }
 
     async Task CreateHtml2PDF(string html, string fileName)
     {
         _logger.LogInformation("PDF 생성 + Blob 업로드(SAS) 시작");
-        // Blob 설정 - SAS 토큰 사용
-        string sasUrl = Environment.GetEnvironmentVariable("BlobSasUrl") ?? throw new InvalidOperationException("BlobSasUrl 설정 누락");
+        
+        // Blob 설정
+        string accountUrl = Environment.GetEnvironmentVariable("BlobAccountUrl") ?? throw new InvalidOperationException("BlobAccountUrl 설정 누락");
+        //string sasUrl = Environment.GetEnvironmentVariable("BlobSasUrl") ?? throw new InvalidOperationException("BlobSasUrl 설정 누락");
         string container = Environment.GetEnvironmentVariable("BlobContainerName") ?? "pdf-files";
 
         // SAS URL을 사용하여 BlobServiceClient 생성
         // SAS URL 형식: https://<account>.blob.core.windows.net/?<sas-token>
-        var blobServiceClient = new BlobServiceClient(new Uri(sasUrl));
+
+        // Managed Identity로 인증
+        // - 로컬 디버깅: Azure CLI 또는 Visual Studio 자격 증명 사용
+        // - Azure 배포: 함수앱의 시스템 할당 또는 사용자 할당 Managed Identity 사용
+        var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
+        {
+            ExcludeEnvironmentCredential = false,
+            ExcludeManagedIdentityCredential = false,
+            ExcludeSharedTokenCacheCredential = false,
+            ExcludeVisualStudioCredential = false,
+            ExcludeAzureCliCredential = false,
+        });
+
+        // MI로 BlobServiceClient 생성
+        var blobServiceClient = new BlobServiceClient(new Uri(accountUrl), credential);
+
+        // SAS URL로 BlobServiceClient 생성
+        //var blobServiceClient = new BlobServiceClient(new Uri(sasUrl));
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
-        await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
+        //await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
         var blobClient = containerClient.GetBlobClient(fileName);
 
         await new BrowserFetcher().DownloadAsync();
         var browser = await Puppeteer.LaunchAsync(new LaunchOptions
         {
             Headless = true,
-            Args = new[] { "--no-sandbox" } // 컨테이너이면 권장
+            Args = new[] 
+            { 
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu",
+                "--lang=ko-KR",
+                "--font-render-hinting=none",  // 폰트 렌더링 개선
+                "--disable-web-security"  // CORS 이슈 방지 (폰트 로딩)
+            },
+            ExecutablePath = "/usr/bin/google-chrome-stable"  // Dockerfile에 설치된 Chrome 사용
         });
         var page = await browser.NewPageAsync();
+
+        // 페이지 언어 설정
+        await page.SetExtraHttpHeadersAsync(new Dictionary<string, string>
+        {
+            { "Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7" }
+        });
 
         var pdfOptions = new PdfOptions
         {
             Format = PaperFormat.A4,
             PrintBackground = true,
             MarginOptions = new MarginOptions { Top = "20mm", Bottom = "20mm", Left = "15mm", Right = "15mm" },
-            DisplayHeaderFooter = false
+            DisplayHeaderFooter = false,
+            PreferCSSPageSize = false,
+            OmitBackground = false  // 배경색 유지
         };
 
         // HTML 직접 로드(또는 page.GoToAsync(url))
-        await page.SetContentAsync(html);
+        await page.SetContentAsync(html, new NavigationOptions 
+        { 
+            WaitUntil = new[] { WaitUntilNavigation.Networkidle0 },
+            Timeout = 30000  // 30초 타임아웃
+        });
+
+        // 폰트 로딩 대기 (중요!)
+        await Task.Delay(2000);  // Google Fonts 로딩 대기
+        await page.EvaluateExpressionAsync("document.fonts.ready");
+        
+        _logger.LogInformation("폰트 로딩 완료");
 
         //await page.PdfAsync("output.pdf", pdfOptions);
         ///await browser.CloseAsync();

@@ -4,19 +4,32 @@
 FROM mcr.microsoft.com/azure-functions/dotnet-isolated:4-dotnet-isolated8.0 AS base
 WORKDIR /home/site/wwwroot
 RUN apt-get update && \
-    apt-get install -y wget unzip curl gnupg && \
+    apt-get install -y wget unzip curl gnupg locales && \
+    # 한글 로케일 설정
+    echo "ko_KR.UTF-8 UTF-8" > /etc/locale.gen && \
+    locale-gen ko_KR.UTF-8 && \
+    # Chrome 설치
     curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-linux-signing-keyring.gpg && \
     echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-linux-signing-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
     apt-get update && \
     apt-get install -y google-chrome-stable && \
+    # 한글 폰트 설치 (Noto Sans KR)
+    apt-get install -y fonts-noto-cjk fonts-noto-cjk-extra fonts-nanum && \
+    # ChromeDriver 설치
     wget https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.183/linux64/chromedriver-linux64.zip && \
     unzip chromedriver-linux64.zip && \
     mv chromedriver-linux64/chromedriver /usr/bin/chromedriver && \
     chmod +x /usr/bin/chromedriver && \
-    rm chromedriver-linux64.zip
+    rm chromedriver-linux64.zip && \
+    # 폰트 캐시 갱신
+    fc-cache -fv && \
+    # 불필요한 패키지 정리
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 EXPOSE 8080
-ENV LANG ko_KR.UTF-8
-ENV LC_ALL ko_KR.UTF-8
+ENV LANG=ko_KR.UTF-8
+ENV LC_ALL=ko_KR.UTF-8
+ENV LANGUAGE=ko_KR:ko
 # 상기 ChromeDriver 설치가 매우 중요함. 특히, 138.0.7204.183 버전을 안 쓰면 버전이 안 맞는다는 에러가 남.
 # 배포 시에는 docker push로 먼저 이미지를 배포한 뒤에 Az Funtion 배포를 수행하는 것이 좋음.
 
