@@ -1,4 +1,3 @@
-using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Http;
@@ -137,22 +136,14 @@ public class GetMonthlyUpdate
 
     async Task CreateHtml2PDF(string html, string fileName)
     {
-        _logger.LogInformation("PDF 생성 + Blob 업로드(Managed Identity) 시작");
-        // Blob 설정
-        string accountUrl = Environment.GetEnvironmentVariable("BlobAccountUrl") ?? throw new InvalidOperationException("AzureStorage 설정 누락");
+        _logger.LogInformation("PDF 생성 + Blob 업로드(SAS) 시작");
+        // Blob 설정 - SAS 토큰 사용
+        string sasUrl = Environment.GetEnvironmentVariable("BlobSasUrl") ?? throw new InvalidOperationException("BlobSasUrl 설정 누락");
         string container = Environment.GetEnvironmentVariable("BlobContainerName") ?? "pdf-files";
 
-        // Managed Identity로 인증
-        //    로컬 디버깅: 개발자 자격 증명 (VS/CLI) 사용 → 필요 시 Azure 로그인
-        //    Azure에 배포: 함수앱의 시스템 할당 MI가 자동 사용됨
-        var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
-        {
-            ExcludeEnvironmentCredential = false,
-            ExcludeManagedIdentityCredential = false,
-            // 네트워크 격리된 환경에서 AuthorityHost가 다르면 여기 지정
-        });
-
-        var blobServiceClient = new BlobServiceClient(new Uri(accountUrl), credential);
+        // SAS URL을 사용하여 BlobServiceClient 생성
+        // SAS URL 형식: https://<account>.blob.core.windows.net/?<sas-token>
+        var blobServiceClient = new BlobServiceClient(new Uri(sasUrl));
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
         await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
         var blobClient = containerClient.GetBlobClient(fileName);

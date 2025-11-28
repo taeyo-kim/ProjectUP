@@ -41,24 +41,17 @@ namespace ProjectUP
             return new OkObjectResult("Function Initialized");
         }
 
-        // Azure 업데이트 정보를 RSS Feed에서 읽어와 HTML로 반환
+        // Azure 업데이트 정보를 RSS Feed에서 읽어와 HTML로 반환, 오리지널 버전
         [Function("GetNews")]
         public async Task<IActionResult> GetNews(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequest req)
         {
-            string url = "https://azure.microsoft.com/ko-kr/updates?id=498166";
             int waitingDuration = 2000;
-            int targetHour = 24;
+            int targetHour = 36;
 
             string body = string.Empty;
             List<AzUpdateNews> dbItems = new List<AzUpdateNews>();
 
-            // 수정된 코드 (CS8600 방지)
-            string? u = req.Query.TryGetValue("URL", out var urlValue) ? urlValue.ToString() : null;
-            if (!string.IsNullOrEmpty(u))
-            {
-                url = u;
-            }
             string? w = req.Query.TryGetValue("WaitingDuration", out var waitingValue) ? waitingValue.ToString() : null;
             if (!string.IsNullOrEmpty(w))
             {
@@ -84,8 +77,7 @@ namespace ProjectUP
             // List<AzUpdateNews>를 루프돌면서 (1)동적 컨텐츠 읽어오고, (2)HTML 스니펫 생성, (3)DB 저장용 리스트에 추가
             foreach (AzUpdateNews updateItem in itemList)
             {
-
-                updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
+                //updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
                 updateItem.Title = Utils.ReplaceBadgeText(updateItem.Title);
 
                 body += string.Format(itemTemplate,
@@ -117,6 +109,7 @@ namespace ProjectUP
             // MultiResponse로 HTTP 응답과 SQL Output 반환
             return new OkObjectResult(body);
         }
+
 
         [Function("GetUpdate")]
         public async Task<MultiResponse> GetUpdate(
@@ -162,16 +155,13 @@ namespace ProjectUP
                 // List<AzUpdateNews>를 루프돌면서 (1)동적 컨텐츠 읽어오고, (2)HTML 스니펫 생성
                 foreach (AzUpdateNews updateItem in itemList)
                 {
-                    string? desc = updateItem.Description;
+                    // 타입이 FULL인 경우에만 동적 컨텐츠 읽어오기
                     if (readingType == "FULL")
                     {
                         updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
                     }
-                    else  // RSS
-                    {
-                        updateItem.Description = desc;
-                    }
 
+                    // 제목의 뱃지 텍스트 치환
                     updateItem.Title = Utils.ReplaceBadgeText(updateItem.Title);
 
                     //SQL DB에 저장하는 Title은 일부 단어들을 한국어로 변환
@@ -342,10 +332,12 @@ namespace ProjectUP
                         DateTime dtPubDate = Convert.ToDateTime(item.PubDate);
                         if ((now - dtPubDate).TotalHours > last)
                         {
-                            break;
+                            //break; to nothing, just skip older items
                         }
-
-                        itemList.Add(item);
+                        else
+                        {
+                            itemList.Add(item);
+                        }
                     }
                 }
             }
