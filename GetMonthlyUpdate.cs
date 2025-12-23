@@ -1,4 +1,4 @@
-using Azure.Identity;
+ï»¿using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Http;
@@ -33,31 +33,31 @@ public class GetMonthlyUpdate
     public async Task<IActionResult> Run(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequest req)
     {
-        _logger.LogInformation("GetMonthlyUpdate ÇÔ¼ö ½ÇÇà ½ÃÀÛ");
+        _logger.LogInformation("GetMonthlyUpdate í•¨ìˆ˜ ì‹¤í–‰ ì‹œì‘");
         string body = string.Empty;
         string startDate = string.Empty;
         string endDate = string.Empty;
 
-        // Äõ¸® ÆÄ¶ó¹ÌÅÍ ÃßÃâ
+        // ì¿¼ë¦¬ íŒŒë¼ë¯¸í„° ì¶”ì¶œ
         string? period = req.Query["Period"];
         if (string.IsNullOrEmpty(period)) period = "Weekly";
 
-        // ±âº»°ª ¼³Á¤
+        // ê¸°ë³¸ê°’ ì„¤ì •
         if (period == "Weekly")
             startDate = DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd");
         if (period == "Monthly")
             startDate = DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd");
         endDate = DateTime.Now.ToString("yyyy-MM-dd");
 
-        _logger.LogInformation($"Á¶È¸ ±â°£: {startDate} ~ {endDate}");
+        _logger.LogInformation($"ì¡°íšŒ ê¸°ê°„: {startDate} ~ {endDate}");
 
-        // µ¥ÀÌÅÍº£ÀÌ½º ¿¬°á ¹®ÀÚ¿­ °¡Á®¿À±â
+        // ë°ì´í„°ë² ì´ìŠ¤ ì—°ê²° ë¬¸ìì—´ ê°€ì ¸ì˜¤ê¸°
         string connectionString = _configuration.GetConnectionString("SqlConnectionString");
         var updateNewsItems = new List<AzUpdateNews>();
 
         try
         {
-            // µ¥ÀÌÅÍº£ÀÌ½º Á¢¼Ó ¹× Äõ¸® ½ÇÇà - ºñµ¿±â ÆĞÅÏ Àû¿ë
+            // ë°ì´í„°ë² ì´ìŠ¤ ì ‘ì† ë° ì¿¼ë¦¬ ì‹¤í–‰ - ë¹„ë™ê¸° íŒ¨í„´ ì ìš©
             await using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 await connection.OpenAsync();
@@ -66,11 +66,11 @@ public class GetMonthlyUpdate
 
                 await using (SqlCommand command = new SqlCommand(queryText, connection))
                 {
-                    // ÆÄ¶ó¹ÌÅÍ Ãß°¡
+                    // íŒŒë¼ë¯¸í„° ì¶”ê°€
                     command.Parameters.Add("@StartDate", SqlDbType.Date).Value = startDate;
                     command.Parameters.Add("@EndDate", SqlDbType.Date).Value = endDate;
 
-                    // Äõ¸® ½ÇÇà ¹× °á°ú ÀĞ±â
+                    // ì¿¼ë¦¬ ì‹¤í–‰ ë° ê²°ê³¼ ì½ê¸°
                     await using (SqlDataReader reader = await command.ExecuteReaderAsync())
                     {
                         while (await reader.ReadAsync())
@@ -90,19 +90,19 @@ public class GetMonthlyUpdate
                 }
             }
 
-            // °á°ú°¡ ¾ø´Â °æ¿ì Ã³¸®
+            // ê²°ê³¼ê°€ ì—†ëŠ” ê²½ìš° ì²˜ë¦¬
             if (updateNewsItems.Count == 0)
             {
-                _logger.LogInformation("Á¶È¸ °á°ú°¡ ¾ø½À´Ï´Ù.");
-                return new OkObjectResult("ÇØ´ç ±â°£¿¡ ¾÷µ¥ÀÌÆ® Á¤º¸°¡ ¾ø½À´Ï´Ù.");
+                _logger.LogInformation("ì¡°íšŒ ê²°ê³¼ê°€ ì—†ìŠµë‹ˆë‹¤.");
+                return new OkObjectResult("í•´ë‹¹ ê¸°ê°„ì— ì—…ë°ì´íŠ¸ ì •ë³´ê°€ ì—†ìŠµë‹ˆë‹¤.");
             }
 
             string itemTemplate = Utils.GetItemTemplate();
 
-            // Á¶È¸µÈ °á°ú·Î HTML »ı¼º
+            // ì¡°íšŒëœ ê²°ê³¼ë¡œ HTML ìƒì„±
             foreach (AzUpdateNews updateItem in updateNewsItems)
             {
-                // HTML º»¹® »ı¼º
+                // HTML ë³¸ë¬¸ ìƒì„±
                 body += string.Format(itemTemplate,
                     updateItem.Link,
                     updateItem.Title,
@@ -111,12 +111,18 @@ public class GetMonthlyUpdate
                     updateItem.PubDate);
             }
 
-            _logger.LogInformation($"ÃÑ {updateNewsItems.Count}°³ÀÇ ¾÷µ¥ÀÌÆ® Ç×¸ñÀ» Á¶È¸Çß½À´Ï´Ù.");
+            _logger.LogInformation($"ì´ {updateNewsItems.Count}ê°œì˜ ì—…ë°ì´íŠ¸ í•­ëª©ì„ ì¡°íšŒí–ˆìŠµë‹ˆë‹¤.");
 
-            // html ¹®ÀÚ¿­ ¿Ï¼ºÇÏ±â
-            string htmlTemp = $"<html>{{0}}<body>{{1}}</body></html>";
+            string infoHeader = $"<div class='update-item' "
+                + "style=\"text-align: center; height: 400; padding-top: 50;\">"
+                + "<h1><img src=\"https://mivoes.blob.core.windows.net/images/azure.jpg\" width=\"50\" style=\"vertical-align: middle;\" /> Azure ì£¼ê°„ ì—…ë°ì´íŠ¸ <h1>"
+                + "<h2><img src=\"https://mivoes.blob.core.windows.net/images/bell.png\" width=\"30\" style=\"vertical-align: middle;\" />"
+                + startDate.Replace("-",".") + " ~ " + endDate.Replace("-",".") + "</h2></div>";
+            
+            // html ë¬¸ìì—´ ì™„ì„±í•˜ê¸°
+            string htmlTemp = $"<html>{{0}}<body>{{1}}{{2}}</body></html>";
             string head = Utils.GetHeadAndStyle();
-            string html = string.Format(htmlTemp, head, body);
+            string html = string.Format(htmlTemp, head, infoHeader, body);
 
             string fileName = $"AzureUpdates_{period}_{startDate}.pdf";
             await CreateHtml2PDF(html, fileName);
@@ -126,8 +132,8 @@ public class GetMonthlyUpdate
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "µ¥ÀÌÅÍº£ÀÌ½º Á¶È¸ Áß ¿À·ù°¡ ¹ß»ıÇß½À´Ï´Ù.");
-            return new ObjectResult($"¿À·ù°¡ ¹ß»ıÇß½À´Ï´Ù: {ex.Message}")
+            _logger.LogError(ex, "ë°ì´í„°ë² ì´ìŠ¤ ì¡°íšŒ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.");
+            return new ObjectResult($"ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤: {ex.Message}")
             {
                 StatusCode = StatusCodes.Status500InternalServerError
             };
@@ -136,19 +142,19 @@ public class GetMonthlyUpdate
 
     async Task CreateHtml2PDF(string html, string fileName)
     {
-        _logger.LogInformation("PDF »ı¼º + Blob ¾÷·Îµå(SAS) ½ÃÀÛ");
+        _logger.LogInformation("PDF ìƒì„± + Blob ì—…ë¡œë“œ(SAS) ì‹œì‘");
         
-        // Blob ¼³Á¤
-        string accountUrl = Environment.GetEnvironmentVariable("BlobAccountUrl") ?? throw new InvalidOperationException("BlobAccountUrl ¼³Á¤ ´©¶ô");
-        //string sasUrl = Environment.GetEnvironmentVariable("BlobSasUrl") ?? throw new InvalidOperationException("BlobSasUrl ¼³Á¤ ´©¶ô");
+        // Blob ì„¤ì •
+        string accountUrl = Environment.GetEnvironmentVariable("BlobAccountUrl") ?? throw new InvalidOperationException("BlobAccountUrl ì„¤ì • ëˆ„ë½");
+        //string sasUrl = Environment.GetEnvironmentVariable("BlobSasUrl") ?? throw new InvalidOperationException("BlobSasUrl ì„¤ì • ëˆ„ë½");
         string container = Environment.GetEnvironmentVariable("BlobContainerName") ?? "pdf-files";
 
-        // SAS URLÀ» »ç¿ëÇÏ¿© BlobServiceClient »ı¼º
-        // SAS URL Çü½Ä: https://<account>.blob.core.windows.net/?<sas-token>
+        // SAS URLì„ ì‚¬ìš©í•˜ì—¬ BlobServiceClient ìƒì„±
+        // SAS URL í˜•ì‹: https://<account>.blob.core.windows.net/?<sas-token>
 
-        // Managed Identity·Î ÀÎÁõ
-        // - ·ÎÄÃ µğ¹ö±ë: Azure CLI ¶Ç´Â Visual Studio ÀÚ°İ Áõ¸í »ç¿ë
-        // - Azure ¹èÆ÷: ÇÔ¼ö¾ÛÀÇ ½Ã½ºÅÛ ÇÒ´ç ¶Ç´Â »ç¿ëÀÚ ÇÒ´ç Managed Identity »ç¿ë
+        // Managed Identityë¡œ ì¸ì¦
+        // - ë¡œì»¬ ë””ë²„ê¹…: Azure CLI ë˜ëŠ” Visual Studio ìê²© ì¦ëª… ì‚¬ìš©
+        // - Azure ë°°í¬: í•¨ìˆ˜ì•±ì˜ ì‹œìŠ¤í…œ í• ë‹¹ ë˜ëŠ” ì‚¬ìš©ì í• ë‹¹ Managed Identity ì‚¬ìš©
         var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
         {
             ExcludeEnvironmentCredential = false,
@@ -158,10 +164,10 @@ public class GetMonthlyUpdate
             ExcludeAzureCliCredential = false,
         });
 
-        // MI·Î BlobServiceClient »ı¼º
+        // MIë¡œ BlobServiceClient ìƒì„±
         var blobServiceClient = new BlobServiceClient(new Uri(accountUrl), credential);
 
-        // SAS URL·Î BlobServiceClient »ı¼º
+        // SAS URLë¡œ BlobServiceClient ìƒì„±
         //var blobServiceClient = new BlobServiceClient(new Uri(sasUrl));
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
         //await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
@@ -178,14 +184,14 @@ public class GetMonthlyUpdate
                 "--disable-dev-shm-usage",
                 "--disable-gpu",
                 "--lang=ko-KR",
-                "--font-render-hinting=none",  // ÆùÆ® ·»´õ¸µ °³¼±
-                "--disable-web-security"  // CORS ÀÌ½´ ¹æÁö (ÆùÆ® ·Îµù)
+                "--font-render-hinting=none",  // í°íŠ¸ ë Œë”ë§ ê°œì„ 
+                "--disable-web-security"  // CORS ì´ìŠˆ ë°©ì§€ (í°íŠ¸ ë¡œë”©)
             },
-            ExecutablePath = "/usr/bin/google-chrome-stable"  // Dockerfile¿¡ ¼³Ä¡µÈ Chrome »ç¿ë
+            ExecutablePath = "/usr/bin/google-chrome-stable"  // Dockerfileì— ì„¤ì¹˜ëœ Chrome ì‚¬ìš©
         });
         var page = await browser.NewPageAsync();
 
-        // ÆäÀÌÁö ¾ğ¾î ¼³Á¤
+        // í˜ì´ì§€ ì–¸ì–´ ì„¤ì •
         await page.SetExtraHttpHeadersAsync(new Dictionary<string, string>
         {
             { "Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7" }
@@ -198,36 +204,37 @@ public class GetMonthlyUpdate
             MarginOptions = new MarginOptions { Top = "20mm", Bottom = "20mm", Left = "15mm", Right = "15mm" },
             DisplayHeaderFooter = false,
             PreferCSSPageSize = false,
-            OmitBackground = false  // ¹è°æ»ö À¯Áö
+            OmitBackground = false  // ë°°ê²½ìƒ‰ ìœ ì§€
         };
 
-        // HTML Á÷Á¢ ·Îµå(¶Ç´Â page.GoToAsync(url))
+        // HTML ì§ì ‘ ë¡œë“œ(ë˜ëŠ” page.GoToAsync(url))
         await page.SetContentAsync(html, new NavigationOptions 
         { 
             WaitUntil = new[] { WaitUntilNavigation.Networkidle0 },
-            Timeout = 30000  // 30ÃÊ Å¸ÀÓ¾Æ¿ô
+            Timeout = 30000  // 30ì´ˆ íƒ€ì„ì•„ì›ƒ
         });
 
-        // ÆùÆ® ·Îµù ´ë±â (Áß¿ä!)
-        await Task.Delay(2000);  // Google Fonts ·Îµù ´ë±â
+        // í°íŠ¸ ë¡œë”© ëŒ€ê¸° (ì¤‘ìš”!)
+        await Task.Delay(2000);  // Google Fonts ë¡œë”© ëŒ€ê¸°
         await page.EvaluateExpressionAsync("document.fonts.ready");
         
-        _logger.LogInformation("ÆùÆ® ·Îµù ¿Ï·á");
+        _logger.LogInformation("í°íŠ¸ ë¡œë”© ì™„ë£Œ");
 
+        // ë¡œì»¬ì— í…ŒìŠ¤íŠ¸ë¡œ íŒŒì¼ ìƒì„±í•˜ëŠ” ì½”ë“œ
         //await page.PdfAsync("output.pdf", pdfOptions);
-        ///await browser.CloseAsync();
+        //await browser.CloseAsync();
 
-        // ¸Ş¸ğ¸® ½ºÆ®¸²À¸·Î PDF »ı¼º
+        // ë©”ëª¨ë¦¬ ìŠ¤íŠ¸ë¦¼ìœ¼ë¡œ PDF ìƒì„±
         byte[] pdfBytes = await page.PdfDataAsync(pdfOptions);
         using var ms = new MemoryStream(pdfBytes);
 
-        // Blob¿¡ ¾÷·Îµå(¸Ş¸ğ¸®¿¡¼­ ¹Ù·Î)
+        // Blobì— ì—…ë¡œë“œ(ë©”ëª¨ë¦¬ì—ì„œ ë°”ë¡œ)
         await blobClient.UploadAsync(ms, overwrite: true);
 
-        // ContentType ¸ŞÅ¸µ¥ÀÌÅÍ ¼³Á¤(¼±ÅÃ)
+        // ContentType ë©”íƒ€ë°ì´í„° ì„¤ì •(ì„ íƒ)
         await blobClient.SetHttpHeadersAsync(new BlobHttpHeaders { ContentType = "application/pdf" });
         await browser.CloseAsync();
 
-        _logger.LogInformation($"¾÷·Îµå ¿Ï·á: {fileName}");
+        _logger.LogInformation($"ì—…ë¡œë“œ ì™„ë£Œ: {fileName}");
     }
 }
