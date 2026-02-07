@@ -1,194 +1,194 @@
-﻿<head>
-    <meta charset='UTF-8'>
-    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    <title>Azure Service Updates</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f7fa;
-            min-height: 100vh;
-            padding: 0.5rem;
-            line-height: 1.6;
-            color: #333;
-        }
-
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 3rem;
-        }
-
-        .update-item {
-            background: white;
-            border: 1px solid #e1e8ed;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            padding: 0;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .update-title {
-            background: #f8f9fa;
-            padding: 0.5rem 1rem;
-            margin: 0;
-            border-bottom: 1px solid #e1e8ed;
-        }
-
-            .update-title b {
-                font-weight: 400;
+﻿<hmtl>
+    <head>
+        <meta charset='UTF-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <title>Azure Service Updates</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
             }
 
-        .update-details {
-            padding: 0.5rem;
-            margin: 0;
-            list-style: none;
-            background: white;
-        }
-
-            .update-details > li {
-                font-size: 0.85rem;
-                background: #f8f9fa;
-                margin-bottom: 0rem;
-                padding: 0.5rem 1.5rem;
-                border-radius: 8px;
-                border-left: 4px solid transparent;
-            }
-
-        li li {
-            margin-left: 1.5rem;
-        }
-
-        .status-badge {
-            color: white;
-            padding: 0.4rem 1rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border: none;
-            display: inline-block;
-            margin-right: 0.8rem;
-        }
-
-        .GA {
-            background: #28a745;
-        }
-
-        .dev {
-            background: #FFFF00;
-            color: black;
-        }
-
-        .preview {
-            background: #00c3ff;
-        }
-
-        .retirement {
-            background: #ff6b6b;
-        }
-
-        strong {
-            color: #2c3e50;
-            font-weight: 600;
-            margin-right: 0.5rem;
-        }
-
-        b a {
-            text-decoration: none;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        a {
-            text-decoration: underline;
-            color: #007acc;
-        }
-
-        span.main-title {
-            display: inline-block;
-            padding: 0.2rem 0.5rem;
-            font-weight: 500;
-            font-size: 1rem;
-            text-align: center;
-            position: relative;
-        }
-
-        .orange-text {
-            color: #ff8c00;
-        }
-
-        .silver-text {
-            color: #878686ad;
-            font-size: 0.9rem;
-        }
-        .brown-text {
-            color: #934807ad;
-            font-size: 0.9rem;
-            padding:5px;
-        }
-
-        .se-text {
-            color: #04c977ad;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-        /* adaptive design */
-        @media (max-width: 768px) {
             body {
-                padding: 1rem;
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: #f5f7fa;
+                min-height: 100vh;
+                padding: 0.5rem;
+                line-height: 1.6;
+                color: #333;
             }
 
             h1 {
-                font-size: 2rem;
-                margin-bottom: 2rem;
+                text-align: center;
+                color: #2c3e50;
+                font-size: 2.5rem;
+                font-weight: 700;
+                margin-bottom: 3rem;
             }
 
-            .update-title, .update-details {
-                padding: 1rem;
+            .update-item {
+                background: white;
+                border: 1px solid #e1e8ed;
+                border-radius: 12px;
+                margin-bottom: 1rem;
+                padding: 0;
+                overflow: hidden;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .update-title {
+                background: #f8f9fa;
+                padding: 0.5rem 1rem;
+                margin: 0;
+                border-bottom: 1px solid #e1e8ed;
+            }
+
+                .update-title b {
+                    font-weight: 400;
+                }
+
+            .update-details {
+                padding: 0.5rem;
+                margin: 0;
+                list-style: none;
+                background: white;
+            }
+
+                .update-details > li {
+                    font-size: 0.85rem;
+                    background: #f8f9fa;
+                    margin-bottom: 0rem;
+                    padding: 0.5rem 1.5rem;
+                    border-radius: 8px;
+                    border-left: 4px solid transparent;
+                }
+
+            li li {
+                margin-left: 1.5rem;
             }
 
             .status-badge {
-                margin-bottom: 0.5rem;
+                color: white;
+                padding: 0.4rem 1rem;
+                border-radius: 20px;
+                font-size: 0.8rem;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                border: none;
+                display: inline-block;
+                margin-right: 0.8rem;
+            }
+
+            .GA {
+                background: #28a745;
+            }
+
+            .dev {
+                background: #FFFF00;
+                color: black;
+            }
+
+            .preview {
+                background: #00c3ff;
+            }
+
+            .retirement {
+                background: #ff6b6b;
+            }
+
+            strong {
+                color: #2c3e50;
+                font-weight: 600;
+                margin-right: 0.5rem;
+            }
+
+            b a {
+                text-decoration: none;
+                font-weight: 600;
+                color: #2c3e50;
+            }
+
+            a {
+                text-decoration: underline;
+                color: #007acc;
+            }
+
+            span.main-title {
+                display: inline-block;
+                padding: 0.2rem 0.5rem;
+                font-weight: 500;
+                font-size: 1rem;
                 text-align: center;
+                position: relative;
             }
-        }
 
-        /* scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
-        }
-
-            ::-webkit-scrollbar-thumb:hover {
-                background: #a8a8a8;
+            .orange-text {
+                color: #ff8c00;
             }
-    </style>
-</head>
 
-<div class="project-signature">
-    <span class="main-title">
-        Project <span class="orange-text">UP</span><span class="silver-text">(date)</span>
-    </span>
-    <span class="silver-text"> by </span><span class="se-text">SE태지</span>
-</div>
+            .silver-text {
+                color: #878686ad;
+                font-size: 0.9rem;
+            }
+
+            .brown-text {
+                color: #ff8c00;
+                font-size: 0.9rem;
+            }
+
+            .se-text {
+                color: #04c977ad;
+                font-size: 0.9rem;
+                font-weight: 600;
+            }
+            /* adaptive design */
+            @media (max-width: 768px) {
+                body {
+                    padding: 1rem;
+                }
+
+                h1 {
+                    font-size: 2rem;
+                    margin-bottom: 2rem;
+                }
+
+                .update-title, .update-details {
+                    padding: 1rem;
+                }
+
+                .status-badge {
+                    margin-bottom: 0.5rem;
+                    text-align: center;
+                }
+            }
+
+            /* scrollbar */
+            ::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            ::-webkit-scrollbar-track {
+                background: #f1f1f1;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: #c1c1c1;
+                border-radius: 4px;
+            }
+
+                ::-webkit-scrollbar-thumb:hover {
+                    background: #a8a8a8;
+                }
+        </style>
+    </head>
+    <body>
 
 
-<span class="brown-text">팀 SE태지입니다. 이 뉴스레터는 10월초까지 시범 운영중에 있습니다. 시범 후 정식 운영될 예정이니 참고바랍니다.</span>
+        <div class='update-item'><div class='update-title'><b><a href='https://azure.microsoft.com/updates?id=555184'><span class='status-badge dev'>[In development]</span>Vaulted Backups for Azure Disk </a></b></div><ul class='update-details'><li style='border-left-color: #ff6b6b'><strong>Description:</strong>Today, Azure Disk Backup protects data by taking regular, crash-consistent snapshots of Azure Disks. These snapshots are stored within your subscription and tenant in a resource group, referred to as the Operational Tier in Azure Backup. This enables fast, operational recovery for scenarios such as accidental deletion or data corruption and is commonly used alongside Azure VM Backup, which provides application-aware protection for virtual machines. &nbsp;<br>Backup best practices recommend a 3-2-1 strategy, including storing a copy of backups offsite in an isolated location securing against a tenant-level compromise.&nbsp;<p>With the introduction of Vault Tier backups, Azure Disk Backup now complements Azure VM Backup by extending disk-level protection with vault-based isolation, independent access controls, and immutability. This enables recovery of trusted data during ransomware attacks or tenant compromises, bringing disk backups in line with Azure VM Backup grade cyber-recovery security. &nbsp;</p><p>As part of this Private Preview, Azure Disk Backup introduces two key capabilities:&nbsp;</p><ul><li data-aria-level='1' data-aria-posinset='1' data-list-defn-props='{&quot;335552541&quot;:1,&quot;335559685&quot;:720,&quot;335559991&quot;:360,&quot;469769226&quot;:&quot;Symbol&quot;,&quot;469769242&quot;:[8226],&quot;469777803&quot;:&quot;left&quot;,&quot;469777804&quot;:&quot;&quot;,&quot;469777815&quot;:&quot;multilevel&quot;}' data-list='' data-font='Symbol' data-leveltext=''><p>Vault Tier Backup: Protect disk backups in a vault (offsite) to meet cyber-recovery, ransomware resilience, and compliance requirements.&nbsp;</p></li><li data-aria-level='1' data-aria-posinset='2' data-list-defn-props='{&quot;335552541&quot;:1,&quot;335559685&quot;:720,&quot;335559991&quot;:360,&quot;469769226&quot;:&quot;Symbol&quot;,&quot;469769242&quot;:[8226],&quot;469777803&quot;:&quot;left&quot;,&quot;469777804&quot;:&quot;&quot;,&quot;469777815&quot;:&quot;multilevel&quot;}' data-list='' data-font='Symbol' data-leveltext=''><p>Regional Disaster Recovery: Restore disk backups to a paired Azure region, enabling new disaster-recovery scenarios alongside Azure VM Backup and Azure Site Recovery.&nbsp;</p></li></ul><p>If&nbsp;you’re&nbsp;interested in participating, <a rel='noreferrer noopener' href='https://aka.ms/vaulteddiskbackup_signup'>sign up for the Private Preview here</a>.</p></li><li style='border-left-color: #4ecdc4'><strong>Category:</strong>In development,Management and governance,Storage,Azure Backup</li><li style='border-left-color: #45b7d1'><strong>Publication Date:</strong>Fri, 06 Feb 2026 23:00:02 Z(UTC)</li></ul></div><div class='update-item'><div class='update-title'><b><a href='https://azure.microsoft.com/updates?id=555488'><span class='status-badge preview'>[In preview]</span>Azure Monitor pipeline data transformations </a></b></div><ul class='update-details'><li style='border-left-color: #ff6b6b'><strong>Description:</strong>Azure Monitor pipeline data transformations feature is now Public Preview! This feature enables users to shape telemetry before it’s ingested into Azure Monitor, helping them control ingestion costs, improve data quality, and simplify analytics at scale.<br>Built into the Azure Monitor pipeline for edge and multi-cloud environments, transformations allow data types such as Syslog and CEF to be filtered, aggregated, standardized, and reshaped prior to ingestion. Automatic schema standardization and built-in validation guardrails ensure continued compatibility with standard tables, allowing users to apply transformations confidently without disrupting dataflow.<br>Transformations also include prebuilt KQL templates for common scenarios, along with advanced filtering and aggregation to reduce noise, lower ingestion volume, and summarize high frequency data into meaningful time windows.By shaping data closer to the source, Azure Monitor pipeline data transformations deliver cleaner data and faster insights for high volume and complex telemetry environments.<br><p><br></p><p>Learn more:</p><ul><li><a href='https://learn.microsoft.com/en-us/azure/azure-monitor/data-collection/pipeline-transformations?tabs=portal&amp;source=docs'>ConfigureAzure Monitor pipeline transformations</a>&nbsp;</li><li><a href='https://medius.microsoft.com/Embed/video-nc/603bc12e-ac26-4c06-baaf-e5be9ff78da9'>AzureMonitor pipeline transformations demo</a>&nbsp;</li></ul><br></li><li style='border-left-color: #4ecdc4'><strong>Category:</strong>In preview,DevOps,Management and governance,Azure Monitor</li><li style='border-left-color: #45b7d1'><strong>Publication Date:</strong>Fri, 06 Feb 2026 22:45:47 Z(UTC)</li></ul></div><div class='update-item'><div class='update-title'><b><a href='https://azure.microsoft.com/updates?id=555981'><span class='status-badge GA'>[Launched]</span> ​ Claude Opus 4.6 now available on Azure Databricks</a></b></div><ul class='update-details'><li style='border-left-color: #ff6b6b'><strong>Description:</strong>Azure Databricks now supports Anthropic Claude Opus 4.6 through&nbsp;<a rel='noreferrer noopener' href='https://nam06.safelinks.protection.outlook.com/?url=https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fazure%2Fdatabricks%2Fmachine-learning%2Fmodel-serving%2Ffoundation-model-overview&amp;data=05%7C02%7Canavin%40microsoft.com%7C420534329f36469b0ed808de64f89ac0%7C72f988bf86f141af91ab2d7cd011db47%7C1%7C0%7C639059216090559206%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&amp;sdata=O%2BFftqSD%2FFS0ar4bgjLTsK3YOEyrVpbZJEkzYXFYEi0%3D&amp;reserved=0'>Mosaic AI Model serving</a>. Claude Opus 4.6 is&nbsp;Anthropic's&nbsp;most advanced model, delivering&nbsp;state-of-the-art&nbsp;performance on agentic coding, complex reasoning, and&nbsp;knowledge&nbsp;work tasks. The model features enhanced coding capabilities with improved planning, code review, and debugging skills, enabling it to&nbsp;operate&nbsp;reliably in large codebases and sustain long-running agentic workflows.&nbsp;<br>Claude Opus 4.6 is ideal for developers building AI agents, enterprises requiring advanced code&nbsp;assistance, and teams working with complex analytical and research workflows. The model now runs securely within the Azure Databricks environment and is accessible through both pay-per-token and provisioned throughput options.<p lang='EN-US'><br></p><p><a rel='noreferrer noopener' href='https://learn.microsoft.com/en-us/azure/databricks/machine-learning/foundation-model-apis/supported-models'>Learn more</a>.</p></li><li style='border-left-color: #4ecdc4'><strong>Category:</strong>Launched,AI + machine learning,Analytics,Azure Databricks</li><li style='border-left-color: #45b7d1'><strong>Publication Date:</strong>Fri, 06 Feb 2026 19:00:01 Z(UTC)</li></ul></div><div class='update-item'><div class='update-title'><b><a href='https://azure.microsoft.com/updates?id=553999'><span class='status-badge dev'>[In development]</span>New planned datacenter region in Thailand (Thailand South)</a></b></div><ul class='update-details'><li style='border-left-color: #ff6b6b'><strong>Description:</strong>Microsoft is announcing our intent to establisha new datacenter region in Thailand. The datacenter region will expand theavailability of Microsoft’s hyperscale cloud services in the region,facilitating enterprise-grade reliability, performance, and compliance withdata residency and privacy standards.<br><a href='https://news.microsoft.com/source/asia/2025/11/18/microsoft-announces-landmark-strategic-commitment-to-accelerate-thailands-ai-powered-growth-and-inclusive-innovation/'>Learn more</a>.&nbsp;</li><li style='border-left-color: #4ecdc4'><strong>Category:</strong>In development</li><li style='border-left-color: #45b7d1'><strong>Publication Date:</strong>Fri, 06 Feb 2026 19:00:01 Z(UTC)</li></ul></div><div class='update-item'><div class='update-title'><b><a href='https://azure.microsoft.com/updates?id=553966'><span class='status-badge GA'>[Launched]</span>AMD v6 confidential VMs in new regions for January 2026</a></b></div><ul class='update-details'><li style='border-left-color: #ff6b6b'><strong>Description:</strong>DCa/ECa v6 series AMD based confidential virtual machines are now generally available in 11 new regions:&nbsp;Canada Central, Canada East, Norway East, Norway West, Italy North, Germany North, France South, Australia East, West US, West US 3, Germany West Central.<br>This is in addition to the 6 regions announced during launch of these VMs:&nbsp;Korea Central, South Africa North, Switzerland North, UAE North, UK South, West Central US.<br><a href='https://aka.ms/Genoa-CVM-GA'>Learn more</a>.</li><li style='border-left-color: #4ecdc4'><strong>Category:</strong>Launched,Compute,Virtual Machines</li><li style='border-left-color: #45b7d1'><strong>Publication Date:</strong>Fri, 06 Feb 2026 01:00:02 Z(UTC)</li></ul></div><div class='update-item'><div class='update-title'><b><a href='https://azure.microsoft.com/updates?id=555944'><span class='status-badge preview'>[In preview]</span>Azure virtual network routing appliance </a></b></div><ul class='update-details'><li style='border-left-color: #ff6b6b'><strong>Description:</strong><p>Azure VirtualNetwork&nbsp;routing&nbsp;appliance&nbsp;offers&nbsp;private&nbsp;connectivityfor&nbsp;workloads across&nbsp;virtual networks.&nbsp;Using&nbsp;specializedhardware, it delivers low latency andhigh&nbsp;throughput,&nbsp;and&nbsp;optimal&nbsp;performance&nbsp;comparedto&nbsp;virtual machines.&nbsp;&nbsp;&nbsp;</p><p>Deployed into private subnet, where it acts as a managedforwarding router.&nbsp;Traffic can&nbsp;be routed using User Defined Routes(UDR)&nbsp;enabling spoke&nbsp;to spoke&nbsp;communication in traditional Hub&amp; Spoke topologies.&nbsp;&nbsp;</p><p>Configured as&nbsp;Azure&nbsp;resource, integratesseamlessly with Azure’s management and governance model.&nbsp;</p><p><a href='https://review.learn.microsoft.com/en-us/azure/virtual-network/virtual-network-routing-appliance-overview?branch=main&amp;branchFallbackFrom=pr-en-us-310935'>LearnMore.</a>&nbsp;</p></li><li style='border-left-color: #4ecdc4'><strong>Category:</strong>In preview,Networking,Virtual Network</li><li style='border-left-color: #45b7d1'><strong>Publication Date:</strong>Thu, 05 Feb 2026 21:45:03 Z(UTC)</li></ul></div><div class='update-item'><div class='update-title'><b><a href='https://azure.microsoft.com/updates?id=555870'><span class='status-badge preview'>[In preview]</span>Claude Opus 4.6, Available on Microsoft Foundry</a></b></div><ul class='update-details'><li style='border-left-color: #ff6b6b'><strong>Description:</strong>Claude Opus 4.6 is now available in <strong>Microsoft Foundry</strong>, bringing Anthropic’s most advanced reasoning model to a secure, enterprise-ready platform built on Azure. With support for complex coding, knowledge work, and agent-driven workflows, including long-context reasoning and governed computer use, customers can move faster from experimentation to production while maintaining trust, security, and operational rigor. This release enables organizations to deploy frontier AI for real-world, high‑stakes scenarios across development, analysis, and automation.<br><a href='https://aka.ms/Claudeopus46blog'>Learn More</a>.<br><br></li><li style='border-left-color: #4ecdc4'><strong>Category:</strong>In preview,AI + machine learning,Microsoft Foundry</li><li style='border-left-color: #45b7d1'><strong>Publication Date:</strong>Thu, 05 Feb 2026 18:30:32 Z(UTC)</li></ul></div>
+
+
+
+    </body>
+</hmtl>

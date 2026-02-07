@@ -46,9 +46,9 @@ namespace ProjectUP
         public async Task<IActionResult> GetNews(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequest req)
         {
-            int waitingDuration = 2000;
+            int waitingDuration = 3000;
             int targetHour = 36;
-
+            bool detail = false;  // 상세내용 읽기 여부
             string body = string.Empty;
             List<AzUpdateNews> dbItems = new List<AzUpdateNews>();
 
@@ -61,6 +61,11 @@ namespace ProjectUP
             if (!string.IsNullOrEmpty(h))
             {
                 targetHour = int.Parse(h);
+            }
+            string? d = req.Query.TryGetValue("Detail", out var detailValue) ? detailValue.ToString() : null;
+            if (!string.IsNullOrEmpty(d))
+            {
+                detail = bool.Parse(d);
             }
 
             string htmlTemp = $"<html>{{0}}<body>{{1}}</body></html>";
@@ -77,7 +82,10 @@ namespace ProjectUP
             // List<AzUpdateNews>를 루프돌면서 (1)동적 컨텐츠 읽어오고, (2)HTML 스니펫 생성, (3)DB 저장용 리스트에 추가
             foreach (AzUpdateNews updateItem in itemList)
             {
-                //updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
+                if (detail)
+                {
+                    updateItem.Description = this.GetContentsFromWebSite(updateItem.Link, waitingDuration);
+                }
                 updateItem.Title = Utils.ReplaceBadgeText(updateItem.Title);
 
                 body += string.Format(itemTemplate,

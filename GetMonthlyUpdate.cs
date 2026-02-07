@@ -37,17 +37,30 @@ public class GetMonthlyUpdate
         string body = string.Empty;
         string startDate = string.Empty;
         string endDate = string.Empty;
+        bool createFile = true;
 
         // 쿼리 파라미터 추출
         string? period = req.Query["Period"];
         if (string.IsNullOrEmpty(period)) period = "Weekly";
 
+        //파일 생성 인자 (기본은 True)
+        string? f = req.Query.TryGetValue("CreateFile", out var createFileValue) ? createFileValue.ToString() : null;
+        if (!string.IsNullOrEmpty(f) && bool.TryParse(f, out bool fileResult))
+        {
+            createFile = fileResult;
+        }
+
         // 기본값 설정
         if (period == "Weekly")
+        {
             startDate = DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd");
+            endDate = DateTime.Now.ToString("yyyy-MM-dd");
+        }
         if (period == "Monthly")
-            startDate = DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd");
-        endDate = DateTime.Now.ToString("yyyy-MM-dd");
+        {
+            startDate = string.Format("{0}-{1}-{2}", DateTime.Now.Year, DateTime.Now.AddMonths(-1).Month, "01");
+            endDate = string.Format("{0}-{1}-{2}", DateTime.Now.Year, DateTime.Now.Month, "01");
+        }
 
         _logger.LogInformation($"조회 기간: {startDate} ~ {endDate}");
 
@@ -117,18 +130,26 @@ public class GetMonthlyUpdate
                 + "style=\"text-align: center; height: 400; padding-top: 50;\">"
                 + "<h1><img src=\"https://mivoes.blob.core.windows.net/images/azure.jpg\" width=\"50\" style=\"vertical-align: middle;\" /> Azure 주간 업데이트 <h1>"
                 + "<h2><img src=\"https://mivoes.blob.core.windows.net/images/bell.png\" width=\"30\" style=\"vertical-align: middle;\" />"
-                + startDate.Replace("-",".") + " ~ " + endDate.Replace("-",".") + "</h2></div>";
-            
+                + startDate.Replace("-",".") + " ~ " + endDate.Replace("-",".") + "</h2>"
+                + "<span class=\"main-title\" title=\"SE 김태영, 성지용\" style=\"padding-top: 100px;\">Project <span class=\"orange-text\" title=\"SE 김태영, 성지용\">UP</span><span class=\"silver-text\">(date) by </span><span class=\"se-text\" title=\"SE 김태영, 성지용\">SE태지</span>"
+                + "</div>";
+
+            string footer = "";
+
             // html 문자열 완성하기
             string htmlTemp = $"<html>{{0}}<body>{{1}}{{2}}</body></html>";
             string head = Utils.GetHeadAndStyle();
             string html = string.Format(htmlTemp, head, infoHeader, body);
 
-            string fileName = $"AzureUpdates_{period}_{startDate}.pdf";
-            await CreateHtml2PDF(html, fileName);
+            if (createFile)
+            {
+                string fileName = $"AzureUpdates_{period}_{startDate}.pdf";
+                await CreateHtml2PDF(html, fileName);
 
-            return new ContentResult { Content = fileName, ContentType = "text/html" };
-            //return new OkObjectResult(html);
+                return new ContentResult { Content = fileName, ContentType = "text/html" };
+            }
+            else
+                return new OkObjectResult(html);
         }
         catch (Exception ex)
         {
@@ -220,7 +241,7 @@ public class GetMonthlyUpdate
         
         _logger.LogInformation("폰트 로딩 완료");
 
-        // 로컬에 테스트로 파일 생성하는 코드
+        ////로컬에 테스트로 파일 생성하는 코드
         //await page.PdfAsync("output.pdf", pdfOptions);
         //await browser.CloseAsync();
 
