@@ -29,6 +29,8 @@ public class GetMonthlyUpdate
         _configuration = configuration;
     }
 
+    // 메뉴얼로 이 함수 호출하면 월간 파일이 생성됨 인자는 Monthly
+    // Period 인자에 Weekly 또는 Monthly 입력 가능 (대소문자 무시)
     [Function("GetUpdateByPeriod")]
     public async Task<IActionResult> Run(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequest req)
@@ -37,10 +39,11 @@ public class GetMonthlyUpdate
         string body = string.Empty;
         string startDate = string.Empty;
         string endDate = string.Empty;
+        string title = string.Empty; //월간, 주간 
         bool createFile = true;
 
-        // 쿼리 파라미터 추출
-        string? period = req.Query["Period"];
+        // 쿼리 파라미터 추출 (대소문자 무시)
+        string? period = req.Query["Period"].FirstOrDefault() ?? req.Query["period"].FirstOrDefault();
         if (string.IsNullOrEmpty(period)) period = "Weekly";
 
         //파일 생성 인자 (기본은 True)
@@ -50,17 +53,22 @@ public class GetMonthlyUpdate
             createFile = fileResult;
         }
 
-        // 기본값 설정
-        if (period == "Weekly")
+        _logger.LogInformation($"Period 파라미터: {period}, CreateFile: {createFile}");
+
+        // 기본값 설정 (대소문자 무시 비교)
+        if (string.Equals(period, "Weekly", StringComparison.OrdinalIgnoreCase))
         {
+            title = "주간";
             startDate = DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd");
             endDate = DateTime.Now.ToString("yyyy-MM-dd");
         }
-        if (period == "Monthly")
+        else if (string.Equals(period, "Monthly", StringComparison.OrdinalIgnoreCase))
         {
-            startDate = string.Format("{0}-{1}-{2}", DateTime.Now.Year, DateTime.Now.AddMonths(-1).Month, "01");
-            endDate = string.Format("{0}-{1}-{2}", DateTime.Now.Year, DateTime.Now.Month, "01");
+            title = "월간";
+            startDate = new DateTime(DateTime.Now.Year, DateTime.Now.AddMonths(-1).Month, 1).ToString("yyyy-MM-dd");
+            endDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).ToString("yyyy-MM-dd");
         }
+        //https://projectupfunc.azurewebsites.net/api/GetUpdateByPeriod?period=Monthly
 
         _logger.LogInformation($"조회 기간: {startDate} ~ {endDate}");
 
@@ -75,7 +83,7 @@ public class GetMonthlyUpdate
             {
                 await connection.OpenAsync();
 
-                string queryText = "SELECT * FROM dbo.AzUpdateNews_KO WHERE DT BETWEEN @StartDate AND @EndDate";
+                string queryText = "SELECT DISTINCT DT, Title, Link, Description, Category, PubDate  FROM dbo.AzUpdateNews_KO WHERE DT BETWEEN @StartDate AND @EndDate";
 
                 await using (SqlCommand command = new SqlCommand(queryText, connection))
                 {
@@ -128,7 +136,8 @@ public class GetMonthlyUpdate
 
             string infoHeader = $"<div class='update-item' "
                 + "style=\"text-align: center; height: 400; padding-top: 50;\">"
-                + "<h1><img src=\"https://mivoes.blob.core.windows.net/images/azure.jpg\" width=\"50\" style=\"vertical-align: middle;\" /> Azure 주간 업데이트 <h1>"
+                + "<h1><img src=\"https://mivoes.blob.core.windows.net/images/azure.jpg\" width=\"50\" style=\"vertical-align: middle;\" /> Azure "
+                + title + " 업데이트 <h1>"
                 + "<h2><img src=\"https://mivoes.blob.core.windows.net/images/bell.png\" width=\"30\" style=\"vertical-align: middle;\" />"
                 + startDate.Replace("-",".") + " ~ " + endDate.Replace("-",".") + "</h2>"
                 + "<span class=\"main-title\" title=\"SE 김태영, 성지용\" style=\"padding-top: 100px;\">Project <span class=\"orange-text\" title=\"SE 김태영, 성지용\">UP</span><span class=\"silver-text\">(date) by </span><span class=\"se-text\" title=\"SE 김태영, 성지용\">SE태지</span>"
